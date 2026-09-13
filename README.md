@@ -8,11 +8,11 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 
 一句话价值：不是预测项目什么时候延期，而是在延期发生后，帮助制作团队快速理解影响、评估方案，并重新找到可交付路径。
 
-## 为什么做
+## 核心问题
 
 研发任务延期通常会沿依赖链影响下游集成、验证和版本节点。项目用一个固定案例展示制作策划如何完成“发现问题 → 分析影响 → 判断风险 → 制定方案 → 调整计划 → 跟踪剩余风险”的完整闭环。
 
-## 核心流程
+## 演示流程
 
 1. 项目概览
 2. 依赖关系
@@ -30,7 +30,7 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 - 决策路径：B 关键动画优先 + C Placeholder临时联调
 - 结果口径：D40 Alpha核心Scope重新具备可行交付路径，但替换、可读性、回归窗口和资源竞争风险仍需持续跟踪
 
-## 功能
+## 功能说明
 
 - 固定WBS与Dependency Graph展示
 - 研发偏差输入与动态D40 + Delay风险投影
@@ -47,7 +47,7 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 
 ## 研究边界
 
-Portfolio scenario simulation based on publicly available information; all schedules and task data are hypothetical.
+本项目为个人游戏研发制作管理研究Demo。任务、WBS、排期、依赖、风险与决策均为模拟数据，不代表任何真实公司或项目内部流程。
 
 本项目不是Jira替代品、甘特图工具、通用项目管理软件、AI聊天助手或企业管理平台，也不包含Monte Carlo、完整CPM或真实项目数据。
 
@@ -62,11 +62,32 @@ npm run dev
 
 浏览器访问终端显示的本地地址。
 
+## 技术栈
+
+- Next.js / React / TypeScript
+- 静态Mock数据
+- 静态导出，不依赖数据库或后端服务
+
 ## 在线Demo
 
 - 主链接（GitHub Pages）：https://1285567522zhou-maker.github.io/feature-delivery-risk-simulator/
 - 备用链接（Vercel）：https://feature-delivery-risk-simulator.vercel.app/
 - 开发预览：https://feature-delivery-risk-simulator.green-pine-5194.chatgpt.site/
+
+## 部署说明
+
+GitHub Pages通过仓库中的`Deploy GitHub Pages`工作流自动部署。推送到`main`分支后即可一键重新发布；也可以在GitHub Actions页面手动运行该工作流。
+
+项目不需要环境变量。静态构建命令为：
+
+```bash
+npm install
+npm run build:static
+```
+
+## Demo重置
+
+在重排结果页点击“重置模拟”，或直接刷新页面，即可恢复默认的AN03延期3个工作日场景。核心Demo数据不会被访问者删除。
 
 ## 核心流程截图
 
