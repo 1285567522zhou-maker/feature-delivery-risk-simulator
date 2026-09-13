@@ -24,14 +24,14 @@ export const milestones = [
 ];
 
 export const dependencyNodes = [
-  { id: "D03", name: "Gameplay", owner: "玩法策划", schedule: "D03", status: "已完成", dependency: "Hard Dependency", detail: "冻结Boss关键机制与预警需求。", state: "done" },
-  { id: "P02/P03", name: "Boss Logic", owner: "玩法 / 程序", schedule: "D18–D26", status: "已完成", dependency: "Hard Dependency", detail: "Boss逻辑与阶段流程是动画制作前置。", state: "done" },
-  { id: "AN03", name: "Phase 2关键动画", owner: "动画", schedule: "D27–D32", projected: "D35", status: "延期", dependency: "Hard Dependency", predecessor: "D03", downstream: "Animation Event / VFX / Integration", detail: "关键机制动作与事件节点返工，位于Alpha关键链路。", state: "risk" },
-  { id: "AE01", name: "Animation Event", owner: "动画 / 技术美术", schedule: "D32–D34", status: "受影响", dependency: "Soft Dependency", detail: "可先使用临时Event推进下游，但正式替换需要回归。", state: "affected" },
-  { id: "FX01/AU01", name: "VFX / Audio", owner: "特效 / 音频", schedule: "D33–D38", status: "受影响", dependency: "Soft Dependency", detail: "依赖动作Timing，可用Placeholder部分解耦。", state: "affected" },
-  { id: "I01", name: "Integration", owner: "客户端", schedule: "D38–D40", status: "窗口压缩", dependency: "Hard Dependency", detail: "正式资源到位后需要完成全链路集成。", state: "waiting" },
-  { id: "MP04/QA02", name: "Multiplayer Validation", owner: "网络 / QA", schedule: "D38–D40", status: "窗口压缩", dependency: "Validation Dependency", detail: "多人环境需要验证同步、触发与可读性。", state: "waiting" },
-  { id: "I02/QA03", name: "QA", owner: "客户端 / QA", schedule: "D39–D40", status: "窗口压缩", dependency: "Validation Dependency", detail: "替换正式资源后仍需完成回归验证。", state: "waiting" },
+  { id: "D03", name: "玩法设计 Gameplay", owner: "玩法策划", schedule: "D03", status: "已完成", dependency: "强依赖 Hard Dependency", detail: "冻结Boss关键机制与预警需求。", state: "done" },
+  { id: "P02/P03", name: "Boss逻辑", owner: "玩法 / 程序", schedule: "D18–D26", status: "已完成", dependency: "强依赖 Hard Dependency", detail: "Boss逻辑与阶段流程是动画制作前置。", state: "done" },
+  { id: "AN03", name: "Phase 2关键动画", owner: "动画", schedule: "D27–D32", projected: "D35", status: "延期", dependency: "强依赖 Hard Dependency", predecessor: "D03", downstream: "动画事件 / VFX / 集成", detail: "关键机制动作与事件节点返工，位于Alpha关键链路。", state: "risk" },
+  { id: "AE01", name: "动画事件 Event", owner: "动画 / 技术美术", schedule: "D32–D34", status: "受影响", dependency: "软依赖 Soft Dependency", detail: "可先使用临时Event推进下游，但正式替换需要回归。", state: "affected" },
+  { id: "FX01/AU01", name: "VFX / 音频", owner: "特效 / 音频", schedule: "D33–D38", status: "受影响", dependency: "软依赖 Soft Dependency", detail: "依赖动作Timing，可用Placeholder部分解耦。", state: "affected" },
+  { id: "I01", name: "功能集成 Integration", owner: "客户端", schedule: "D38–D40", status: "窗口压缩", dependency: "强依赖 Hard Dependency", detail: "正式资源到位后需要完成全链路集成。", state: "waiting" },
+  { id: "MP04/QA02", name: "多人验证", owner: "网络 / QA", schedule: "D38–D40", status: "窗口压缩", dependency: "验收依赖 Validation Dependency", detail: "多人环境需要验证同步、触发与可读性。", state: "waiting" },
+  { id: "I02/QA03", name: "QA质量验证", owner: "客户端 / QA", schedule: "D39–D40", status: "窗口压缩", dependency: "验收依赖 Validation Dependency", detail: "替换正式资源后仍需完成回归验证。", state: "waiting" },
   { id: "D40", name: "Alpha", owner: "制作", schedule: "Baseline D40", status: "风险中", dependency: "Milestone", detail: "风险暴露约D43；冻结Feature Ready仍为D60。", state: "milestone" },
 ];
 
@@ -47,6 +47,6 @@ export const residualRisks = [
   { id: "R1", title: "Placeholder替换风险", owner: "VFX / Animation", action: "锁定正式Event替换清单与验收时间。" },
   { id: "R2", title: "机制可读性风险", owner: "Gameplay", action: "保留关键机制可读性验收，不用临时方案降低标准。" },
   { id: "R3", title: "QA回归窗口压缩", owner: "QA", action: "预留正式资源替换后的定向回归窗口。" },
-  { id: "R4", title: "非关键动画后移", owner: "Animation / Production", action: "登记Polish Backlog并明确后续交付节点。" },
+  { id: "R4", title: "资源竞争风险", owner: "Animation / Production", action: "跟踪返工与Polish Backlog对动画资源的并行占用。" },
 ];
 
