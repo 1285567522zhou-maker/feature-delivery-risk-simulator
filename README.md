@@ -1,10 +1,10 @@
 # 游戏研发Feature交付风险分析模拟器
 
-Feature Delivery Risk Simulator｜V1.0 Demo
+Feature Delivery Risk Simulator｜V1.0 Final
 
 ## 项目简介
 
-这是一个面向游戏研发流程的Feature交付风险分析模拟Demo。V1.0冻结为“AN03关键动画因机制可读性返工延期3个工作日”案例回放：工具沿Dependency Graph展开影响，判断Milestone风险，展示可选决策，并模拟Replan后的可行交付路径与Residual Risk。
+这是一个面向游戏研发流程的Feature交付风险分析模拟Demo。用户可以选择关键链路任务、风险类型、1–5个工作日延期和原因；工具沿Dependency Graph展开下游影响，以轻量规则判断Milestone风险，并按原因调整推荐方案。AN03 +3D、质量返工、B+C仍是官方完整Replan场景。
 
 一句话价值：不是预测项目什么时候延期，而是在延期发生后，帮助制作团队快速理解影响、评估方案，并重新找到可交付路径。
 
@@ -33,17 +33,26 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 ## 功能说明
 
 - 固定WBS与Dependency Graph展示
-- AN03 +3D冻结风险事件与D43风险投影
-- Direct / Secondary / Milestone影响分析
+- 五个关键节点的风险输入与1–5工作日偏差
+- 根据Task动态生成Direct / Secondary / Milestone影响
+- 根据Delay与任务阶段计算D40风险暴露日
+- 根据Reason动态调整优先推荐方案
 - 进度、质量、资源、范围四维定性评估
-- 五类决策方案对比；仅B+C参与V1.0计算
+- 七类决策方案对比；完整Replan仍只建模官方B+C场景
 - B + C组合Replan模拟
 - Residual Risk及Owner跟踪
 - 一键播放完整示例
 
 ## 数据说明
 
-任务、Milestone、依赖、决策方案和剩余风险集中配置在 `lib/demo-data.ts`。当前版本采用JSON式Mock数据与固定规则，不依赖数据库或后端服务。风险事件字段全部冻结，避免输入未建模组合后产生错误结论。
+任务、Milestone、依赖、决策方案、推荐映射和剩余风险集中配置在 `lib/demo-data.ts`。当前版本采用JSON式Mock数据与简单确定性规则，不依赖数据库或后端服务。
+
+### 轻量规则
+
+- Task：从所选节点开始，按`dependencyNodes`顺序向下游传播。
+- Delay：基础风险暴露为D40加延期天数；FX01的软依赖可吸收约1天，验证阶段的MP04与QA02分别增加1天与2天暴露。
+- Reason：质量返工推荐B+C；资源不足推荐A+D；依赖阻塞推荐C；技术问题推荐F+D；Scope变化推荐G+D+E。
+- Replan：只有官方AN03 +3D、质量返工与B+C组合生成完整D40重排结果，其他组合只提供影响分析和方案比较。
 
 ## 研究边界
 
