@@ -22,9 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: corepack enable
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build:static
+      - run: npm install --no-package-lock --no-audit --no-fund
+      - run: npm run build:static
         env:
           NEXT_PUBLIC_BASE_PATH: /feature-delivery-risk-simulator
       - name: Add static fallback
