@@ -4,7 +4,7 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 
 ## 项目简介
 
-这是一个面向游戏研发流程的Feature交付风险分析模拟Demo。用户输入已经发生的研发偏差后，工具会沿Dependency Graph展开影响，判断Milestone风险，展示可选决策，并模拟Replan后的可行交付路径与Residual Risk。
+这是一个面向游戏研发流程的Feature交付风险分析模拟Demo。V1.0冻结为“AN03关键动画因机制可读性返工延期3个工作日”案例回放：工具沿Dependency Graph展开影响，判断Milestone风险，展示可选决策，并模拟Replan后的可行交付路径与Residual Risk。
 
 一句话价值：不是预测项目什么时候延期，而是在延期发生后，帮助制作团队快速理解影响、评估方案，并重新找到可交付路径。
 
@@ -33,17 +33,17 @@ Feature Delivery Risk Simulator｜V1.0 Demo
 ## 功能说明
 
 - 固定WBS与Dependency Graph展示
-- 研发偏差输入与动态D40 + Delay风险投影
+- AN03 +3D冻结风险事件与D43风险投影
 - Direct / Secondary / Milestone影响分析
 - 进度、质量、资源、范围四维定性评估
-- 五类决策方案与人工勾选
+- 五类决策方案对比；仅B+C参与V1.0计算
 - B + C组合Replan模拟
 - Residual Risk及Owner跟踪
 - 一键播放完整示例
 
 ## 数据说明
 
-任务、Milestone、依赖、决策方案和剩余风险集中配置在 `lib/demo-data.ts`。当前版本采用JSON式Mock数据与固定规则，不依赖数据库或后端服务。
+任务、Milestone、依赖、决策方案和剩余风险集中配置在 `lib/demo-data.ts`。当前版本采用JSON式Mock数据与固定规则，不依赖数据库或后端服务。风险事件字段全部冻结，避免输入未建模组合后产生错误结论。
 
 ## 研究边界
 
@@ -62,6 +62,8 @@ npm run dev
 
 浏览器访问终端显示的本地地址。
 
+本地开发不需要设置`NEXT_PUBLIC_BASE_PATH`，页面默认运行在根路径。
+
 ## 技术栈
 
 - Next.js / React / TypeScript
@@ -76,12 +78,23 @@ npm run dev
 
 项目通过GitHub Pages公开部署，无需登录或安装软件。推送到`main`分支后，仓库中的`Deploy GitHub Pages`工作流会自动重新发布；也可以在GitHub Actions页面手动运行该工作流。
 
-项目不需要环境变量。静态构建命令为：
+工作流与本地统一使用锁文件安装和相同构建命令：
 
 ```bash
-npm install
-npm run build:static
+npm ci
+npm run build
 ```
+
+### Base Path
+
+`next.config.ts`读取构建期变量`NEXT_PUBLIC_BASE_PATH`。本地不设置时使用根路径；GitHub Actions会根据仓库名自动传入`/${{ github.event.repository.name }}`。仓库改名后无需修改源码，重新运行工作流即可；正式URL会同步变为新的仓库路径。
+
+### 最短维护流程
+
+1. 仓库`Settings → Pages`保持`Source: GitHub Actions`。
+2. 推送`main`，在Actions中确认`Deploy GitHub Pages`成功。
+3. 用未登录窗口检查首页、刷新、快速演示和手机宽度。
+4. 需要回滚时，在GitHub撤销问题提交，再重新运行部署工作流。
 
 ## Demo重置
 
