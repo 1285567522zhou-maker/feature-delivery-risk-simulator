@@ -22,10 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install --no-package-lock --no-audit --no-fund
-      - run: npm run build:static
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
         env:
-          NEXT_PUBLIC_BASE_PATH: /feature-delivery-risk-simulator
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
       - name: Add static fallback
         run: cp out/index.html out/404.html
       - uses: actions/upload-pages-artifact@v3
