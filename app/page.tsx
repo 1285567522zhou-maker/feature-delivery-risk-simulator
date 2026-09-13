@@ -2,13 +2,16 @@
 
 import { useState, type ComponentProps } from "react";
 import { Activity, ArrowRight, BarChart3, Check, CheckCircle2, Clock3, GitBranch, RotateCcw, ShieldAlert, Target, TriangleAlert, Wand2 } from "lucide-react";
-import { decisionOptions, demoScenario, dependencyNodes, milestones, residualRisks } from "@/lib/demo-data";
+import { decisionOptions, demoScenario, dependencyNodes, issueTypes, milestones, reasons, recommendationByReason, residualRisks, riskTasks } from "@/lib/demo-data";
 
 function Button({ className, variant = "default", ...props }: ComponentProps<"button"> & { variant?: "default" | "outline" }) {
   return <button className={["ui-button", variant === "outline" ? "outline" : "", className].filter(Boolean).join(" ")} {...props}/>;
 }
 
 type PageId = "dashboard" | "graph" | "input" | "impact" | "decision" | "result";
+type RiskTaskId = (typeof riskTasks)[number]["id"];
+type IssueTypeId = (typeof issueTypes)[number]["id"];
+type ReasonId = (typeof reasons)[number]["id"];
 const pages: { id: PageId; label: string; step: string; icon: typeof Activity }[] = [
   { id: "dashboard", label: "项目概览", step: "01", icon: BarChart3 },
   { id: "graph", label: "依赖关系", step: "02", icon: GitBranch },
@@ -21,19 +24,30 @@ const pages: { id: PageId; label: string; step: string; icon: typeof Activity }[
 export default function Home() {
   const [page, setPage] = useState<PageId>("dashboard");
   const [selectedNode, setSelectedNode] = useState(2);
+  const [taskId, setTaskId] = useState<RiskTaskId>("AN03");
+  const [issueTypeId, setIssueTypeId] = useState<IssueTypeId>("quality");
+  const [delayDays, setDelayDays] = useState(3);
+  const [reasonId, setReasonId] = useState<ReasonId>("quality");
+  const [description, setDescription] = useState<string>(demoScenario.event.description);
   const [decisions, setDecisions] = useState<string[]>([]);
   const [analyzed, setAnalyzed] = useState(false);
   const [applied, setApplied] = useState(false);
   const [demoRunning, setDemoRunning] = useState(false);
-  const delayDays = demoScenario.event.delayDays;
-  const projectedDay = demoScenario.baselineDay + demoScenario.event.delayDays;
-  const isModeled = decisions.includes("critical") && decisions.includes("placeholder");
+  const task = riskTasks.find((item) => item.id === taskId) ?? riskTasks[0];
+  const projectedDay = demoScenario.baselineDay + Math.max(1, delayDays + task.exposureModifier);
+  const recommendedIds = recommendationByReason[reasonId];
+  const isOfficialScenario = taskId === "AN03" && issueTypeId === "quality" && delayDays === 3 && reasonId === "quality";
+  const isModeled = isOfficialScenario && decisions.includes("critical") && decisions.includes("placeholder");
 
   function analyze() { setApplied(false); setAnalyzed(true); setPage("impact"); }
   function applyDecision() { if (!isModeled) return; setApplied(true); setPage("result"); }
-  function reset() { setPage("dashboard"); setDecisions([]); setAnalyzed(false); setApplied(false); setDemoRunning(false); }
+  function resetScenario() {
+    setTaskId("AN03"); setIssueTypeId("quality"); setDelayDays(3); setReasonId("quality");
+    setDescription(demoScenario.event.description); setDecisions([]); setAnalyzed(false); setApplied(false);
+  }
+  function reset() { setPage("dashboard"); resetScenario(); setDemoRunning(false); }
   function runQuickDemo() {
-    setDemoRunning(true); setDecisions([]); setAnalyzed(false); setApplied(false); setPage("input");
+    setDemoRunning(true); resetScenario(); setPage("input");
     window.setTimeout(() => { setAnalyzed(true); setPage("impact"); }, 650);
     window.setTimeout(() => { setDecisions(["critical", "placeholder"]); setPage("decision"); }, 1400);
     window.setTimeout(() => { setApplied(true); setPage("result"); setDemoRunning(false); }, 2300);
@@ -43,16 +57,16 @@ export default function Home() {
     <aside className="sidebar">
       <div className="brand"><span className="brand-mark"><GitBranch size={19}/></span><div><strong>交付风险模拟器</strong><small>Feature Delivery Risk Simulator</small></div></div>
       <nav aria-label="六步演示流程">{pages.map((item) => { const Icon = item.icon; return <button key={item.id} className={page === item.id ? "active" : ""} onClick={() => setPage(item.id)}><Icon size={17}/><span>{item.label}</span><small>{item.step}</small></button>; })}</nav>
-      <div className="sidebar-foot"><span>V1.0 DEMO</span><strong>Alpha Scenario</strong></div>
+      <div className="sidebar-foot"><span>V1.0 FINAL</span><strong>Interactive Risk Scenario</strong></div>
     </aside>
     <section className="workspace">
       <header className="topbar"><div><span>示例场景</span><strong>多人首领Feature</strong></div><div className="top-status"><span>Alpha · D40</span><b><i/>风险中 · At Risk</b></div></header>
       <div className="content">
         {page === "dashboard" && <Dashboard onGraph={() => setPage("graph")} onInput={() => setPage("input")} onDemo={runQuickDemo} demoRunning={demoRunning}/>}
         {page === "graph" && <Graph selected={selectedNode} setSelected={setSelectedNode} onNext={() => setPage("input")}/>}
-        {page === "input" && <RiskInput onAnalyze={analyze}/>}
-        {page === "impact" && <Impact analyzed={analyzed} delayDays={delayDays} projectedDay={projectedDay} onNext={() => setPage("decision")}/>}
-        {page === "decision" && <Decision decisions={decisions} setDecisions={(value) => { setDecisions(value); setApplied(false); }} onApply={applyDecision}/>}
+        {page === "input" && <RiskInput taskId={taskId} setTaskId={setTaskId} issueTypeId={issueTypeId} setIssueTypeId={setIssueTypeId} delayDays={delayDays} setDelayDays={setDelayDays} reasonId={reasonId} setReasonId={(value) => { setReasonId(value); setDecisions([]); setApplied(false); }} description={description} setDescription={setDescription} onAnalyze={analyze}/>} 
+        {page === "impact" && <Impact analyzed={analyzed} taskId={taskId} issueTypeId={issueTypeId} reasonId={reasonId} description={description} delayDays={delayDays} projectedDay={projectedDay} onNext={() => setPage("decision")}/>} 
+        {page === "decision" && <Decision decisions={decisions} recommendedIds={recommendedIds} reasonId={reasonId} isOfficialScenario={isOfficialScenario} setDecisions={(value) => { setDecisions(value); setApplied(false); }} onApply={applyDecision}/>} 
         {page === "result" && <Result delayDays={delayDays} projectedDay={projectedDay} applied={applied} onDecision={() => setPage("decision")} onReset={reset}/>}
       </div>
     </section>
@@ -67,7 +81,7 @@ function Dashboard({ onGraph, onInput, onDemo, demoRunning }: { onGraph: () => v
   return <>
     <section className="hero"><span className="hero-tag">游戏研发 · Feature交付</span><h1>游戏研发Feature交付风险分析模拟器</h1><h2>Feature Delivery Risk Simulator</h2><p>本 Demo 为个人制作管理研究原型，用于展示游戏研发Feature中的依赖传播、风险判断、方案取舍与Replan逻辑，不代表任何真实项目或公司内部流程。</p><div className="hero-actions"><Button onClick={onDemo} disabled={demoRunning}>{demoRunning ? "演示进行中…" : "快速演示"}<ArrowRight size={16}/></Button><Button variant="outline" onClick={onInput}>输入研发偏差</Button></div></section>
     <section className="scenario-banner"><div><span>示例场景</span><strong>多人首领Feature｜Alpha目标 D40</strong></div><p><TriangleAlert size={18}/>Phase 2关键动画因机制可读性返工，预计延期3个工作日。</p></section>
-    <section className="panel static-fallback"><PanelTitle kicker="完整案例链 · 静态概览" title="不操作也能看懂的交付判断" badge="V1.0固定场景"/><div className="fallback-flow"><FlowStep index="01" title="AN03关键动画延期 +3D" text="机制可读性返工" tone="risk"/><ArrowRight/><FlowStep index="02" title="依赖传播" text="Event → VFX → Integration → Multiplayer → QA"/><ArrowRight/><FlowStep index="03" title="D40 Alpha风险" text="未重排风险暴露 ≈ D43" tone="risk"/><ArrowRight/><FlowStep index="04" title="B + C决策" text="关键优先 + Placeholder"/><ArrowRight/><FlowStep index="05" title="重新排期 Replan" text="D40核心Scope恢复可行路径" tone="success"/><ArrowRight/><FlowStep index="06" title="剩余风险 Residual Risk" text="替换、可读性、回归与资源竞争仍需跟踪"/></div></section>
+    <section className="panel static-fallback"><PanelTitle kicker="完整案例链 · 静态概览" title="不操作也能看懂的交付判断" badge="V1.0 Final官方场景"/><div className="fallback-flow"><FlowStep index="01" title="AN03关键动画延期 +3D" text="机制可读性返工" tone="risk"/><ArrowRight/><FlowStep index="02" title="依赖传播" text="Event → VFX → Integration → Multiplayer → QA"/><ArrowRight/><FlowStep index="03" title="D40 Alpha风险" text="未重排风险暴露 ≈ D43" tone="risk"/><ArrowRight/><FlowStep index="04" title="B + C决策" text="关键优先 + Placeholder"/><ArrowRight/><FlowStep index="05" title="重新排期 Replan" text="D40核心Scope恢复可行路径" tone="success"/><ArrowRight/><FlowStep index="06" title="剩余风险 Residual Risk" text="替换、可读性、回归与资源竞争仍需跟踪"/></div></section>
     <div className="metric-grid">
       <Metric label="当前状态" value="高风险" detail="High · At Risk" risk/><Metric label="任务" value="36" detail="WBS任务总数"/><Metric label="延期" value="1" detail="AN03 · +3工作日"/><Metric label="剩余工作日" value="15" detail="至Alpha验收"/>
     </div>
@@ -82,7 +96,7 @@ function Dashboard({ onGraph, onInput, onDemo, demoRunning }: { onGraph: () => v
 
 function Metric({ label, value, detail, risk = false }: { label: string; value: string; detail: string; risk?: boolean }) { return <div className={`metric ${risk ? "risk" : ""}`}><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>; }
 function PanelTitle({ kicker, title, badge }: { kicker: string; title: string; badge?: string }) { return <div className="panel-title"><div><span>{kicker}</span><h2>{title}</h2></div>{badge && <b>{badge}</b>}</div>; }
-function Chain({ items }: { items: string[] }) { return <>{items.map((item, index) => <div className="chain-piece" key={item}><span>{item}</span>{index < items.length - 1 && <ArrowRight size={15}/>}</div>)}</>; }
+function Chain({ items }: { items: string[] }) { return <>{items.map((item, index) => <div className="chain-piece" key={`${index}-${item}`}><span>{item}</span>{index < items.length - 1 && <ArrowRight size={15}/>}</div>)}</>; }
 function FlowStep({ index, title, text, tone = "" }: { index: string; title: string; text: string; tone?: string }) { return <div className={`flow-step ${tone}`}><small>{index}</small><strong>{title}</strong><span>{text}</span></div>; }
 
 function Graph({ selected, setSelected, onNext }: { selected: number; setSelected: (value: number) => void; onNext: () => void }) {
@@ -95,36 +109,57 @@ function Graph({ selected, setSelected, onNext }: { selected: number; setSelecte
   </>;
 }
 
-function RiskInput({ onAnalyze }: { onAnalyze: () => void }) {
-  return <><PageTitle kicker="风险事件" title="AN03 +3D 固定案例回放" desc="V1.0只演示一个冻结案例，以下字段不支持修改，避免产生未建模的错误结论。"/><section className="panel form-panel">
-    <div className="frozen-note"><ShieldAlert size={16}/><span><b>固定案例</b>：AN03关键动画因机制可读性返工延期3个工作日。</span></div>
-    <div className="field"><label>任务</label><div className="field-value">AN03｜Phase 2关键动画</div></div>
-    <div className="field"><label>风险类型</label><div className="field-value">质量返工导致延期</div></div>
-    <div className="field"><label>延期时间</label><div className="field-value">+3 工作日</div></div>
-    <div className="field"><label>原因</label><div className="field-value">质量返工 Quality Rework</div></div>
-    <div className="field wide"><label>说明</label><div className="field-value description">{demoScenario.event.description}</div></div>
+function RiskInput({ taskId, setTaskId, issueTypeId, setIssueTypeId, delayDays, setDelayDays, reasonId, setReasonId, description, setDescription, onAnalyze }: {
+  taskId: RiskTaskId; setTaskId: (value: RiskTaskId) => void;
+  issueTypeId: IssueTypeId; setIssueTypeId: (value: IssueTypeId) => void;
+  delayDays: number; setDelayDays: (value: number) => void;
+  reasonId: ReasonId; setReasonId: (value: ReasonId) => void;
+  description: string; setDescription: (value: string) => void; onAnalyze: () => void;
+}) {
+  return <><PageTitle kicker="风险输入" title="记录研发偏差" desc="选择关键链路节点与风险条件，系统将用轻量规则生成影响传播与方案推荐。"/><section className="panel form-panel">
+    <div className="frozen-note"><ShieldAlert size={16}/><span><b>官方演示场景</b>：AN03 +3D、质量返工与B+C仍可通过首页“快速演示”一键播放。</span></div>
+    <div className="field"><label htmlFor="task">任务 Task</label><select id="task" value={taskId} onChange={(event) => setTaskId(event.target.value as RiskTaskId)}>{riskTasks.map((task) => <option key={task.id} value={task.id}>{task.id}｜{task.name}</option>)}</select></div>
+    <div className="field"><label htmlFor="issue-type">风险类型 Issue Type</label><select id="issue-type" value={issueTypeId} onChange={(event) => setIssueTypeId(event.target.value as IssueTypeId)}>{issueTypes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></div>
+    <div className="field"><label htmlFor="delay">延期时间 Delay</label><select id="delay" value={delayDays} onChange={(event) => setDelayDays(Number(event.target.value))}>{[1,2,3,4,5].map((day) => <option key={day} value={day}>+{day} 工作日</option>)}</select></div>
+    <div className="field"><label htmlFor="reason">原因 Reason</label><select id="reason" value={reasonId} onChange={(event) => setReasonId(event.target.value as ReasonId)}>{reasons.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></div>
+    <div className="field wide"><label htmlFor="description">说明 Description</label><textarea id="description" value={description} onChange={(event) => setDescription(event.target.value)} /></div>
     <div className="form-footer"><span><ShieldAlert size={16}/>基于当前Dependency Graph计算</span><Button onClick={onAnalyze}>分析影响<Wand2 size={16}/></Button></div>
   </section></>;
 }
 
-function Impact({ analyzed, delayDays, projectedDay, onNext }: { analyzed: boolean; delayDays: number; projectedDay: number; onNext: () => void }) {
-  return <><PageTitle kicker="影响分析" title="AN03偏差影响已展开" desc={`Phase 2关键动画延期 +${delayDays} 工作日 · 质量返工`} action={<span className="status risk-status"><i/>风险中 · At Risk</span>}/>
-    <section className="panel projection-summary"><div><span>原Alpha目标</span><strong>D40</strong></div><ArrowRight/><div><span>未重排风险暴露</span><strong className="risk-text">≈ D{projectedDay}</strong></div><p><b>风险暴露 ≠ 必然延期。</b> 这是当前依赖不调整时的风险投影，用于支持制作决策。</p></section>
-    <div className="impact-grid"><section className="panel"><PanelTitle kicker="直接影响" title="Animation Event"/><p>正式Timing与事件节点尚未锁定，直接影响下游表现制作。</p></section><section className="panel"><PanelTitle kicker="间接影响" title="下游验证窗口"/><ul><li>VFX与Audio同步</li><li>Feature Integration</li><li>Multiplayer Validation</li><li>QA Validation</li></ul></section><section className="panel"><PanelTitle kicker="Milestone影响" title={`Alpha · D40 → 风险暴露D${projectedDay}`}/><p>AN03位于关键链路，延期会连续压缩VFX、集成、多人验证与QA窗口。</p></section></div>
-    <section className="panel"><PanelTitle kicker="影响链 Impact Chain" title="风险传导路径" badge={analyzed ? "基于固定案例" : "示例预设"}/><div className="chain"><Chain items={[`AN03关键动画 +${delayDays}工作日`, "动画事件 Event", "VFX", "全链路集成", "多人验证", "QA", "D40 Alpha风险"]}/></div></section>
-    <section className="panel"><PanelTitle kicker="风险评估 Risk Assessment" title="四维风险评估"/><div className="risk-grid"><RiskItem label="进度风险" level="高" text="关键链路验证窗口被压缩。"/><RiskItem label="质量风险" level="高" text="关键机制可读性不足。"/><RiskItem label="资源风险" level="中" text="返工持续占用动画资源。" medium/><RiskItem label="范围风险" level="低" text="当前未直接改变Feature核心Scope。" low/></div></section>
+function Impact({ analyzed, taskId, issueTypeId, reasonId, description, delayDays, projectedDay, onNext }: {
+  analyzed: boolean; taskId: RiskTaskId; issueTypeId: IssueTypeId; reasonId: ReasonId; description: string;
+  delayDays: number; projectedDay: number; onNext: () => void;
+}) {
+  const task = riskTasks.find((item) => item.id === taskId) ?? riskTasks[0];
+  const taskIndex = dependencyNodes.findIndex((node) => node.id === task.nodeId);
+  const downstream = dependencyNodes.slice(taskIndex + 1);
+  const direct = downstream[0];
+  const secondary = downstream.slice(1).filter((node) => node.id !== "D40");
+  const issue = issueTypes.find((item) => item.id === issueTypeId)?.label ?? "延期";
+  const reason = reasons.find((item) => item.id === reasonId)?.label ?? "";
+  const exposure = projectedDay - demoScenario.baselineDay;
+  const scheduleHigh = exposure >= 3;
+  const qualityHigh = issueTypeId === "quality" || reasonId === "quality";
+  const resourceHigh = issueTypeId === "resource" || reasonId === "resource";
+  const scopeHigh = issueTypeId === "scope" || reasonId === "scope";
+  return <><PageTitle kicker="影响分析" title={`${task.id}偏差影响已展开`} desc={`${task.name} · +${delayDays}工作日 · ${issue} · ${reason}`} action={<span className="status risk-status"><i/>{exposure >= 4 ? "高风险" : "风险中"} · At Risk</span>}/>
+    <section className="panel projection-summary"><div><span>原Alpha目标</span><strong>D40</strong></div><ArrowRight/><div><span>未重排风险暴露</span><strong className="risk-text">≈ D{projectedDay}</strong></div><p><b>风险暴露 ≠ 必然延期。</b> {task.milestoneNote}<br/><small>记录说明：{description || "未填写"}</small></p></section>
+    <div className="impact-grid"><section className="panel"><PanelTitle kicker="直接影响" title={direct ? `${direct.id}｜${direct.name}` : "D40 Alpha"}/><p>{task.name}发生偏差后，首先压缩{direct?.name ?? "Alpha验收"}的开始与验证窗口。</p></section><section className="panel"><PanelTitle kicker="间接影响" title={`${secondary.length}个下游节点`}/><ul>{secondary.length ? secondary.map((node) => <li key={node.id}>{node.id}｜{node.name}</li>) : <li>无额外间接任务，直接影响Alpha验收。</li>}</ul></section><section className="panel"><PanelTitle kicker="Milestone影响" title={`Alpha · D40 → 风险暴露D${projectedDay}`}/><p>{task.milestoneNote} 当前简单规则计入约{exposure}个工作日风险暴露。</p></section></div>
+    <section className="panel"><PanelTitle kicker="影响链 Impact Chain" title="风险传导路径" badge={analyzed ? "基于本次输入" : "示例预设"}/><div className="chain"><Chain items={[`${task.id} ${task.name} +${delayDays}D`, ...downstream.filter((node) => node.id !== "D40").map((node) => node.name), `Alpha风险 D${projectedDay}`]}/></div></section>
+    <section className="panel"><PanelTitle kicker="风险评估 Risk Assessment" title="四维风险评估"/><div className="risk-grid"><RiskItem label="进度风险" level={scheduleHigh ? "高" : "中"} text={`Alpha风险暴露约D${projectedDay}。`} medium={!scheduleHigh}/><RiskItem label="质量风险" level={qualityHigh ? "高" : "中"} text={qualityHigh ? "质量返工或可读性需要重点验证。" : "需关注下游集成质量。"} medium={!qualityHigh}/><RiskItem label="资源风险" level={resourceHigh ? "高" : "中"} text={resourceHigh ? "资源不足直接限制并行处理。" : "偏差会占用既有处理资源。"} medium={!resourceHigh}/><RiskItem label="范围风险" level={scopeHigh ? "高" : "低"} text={scopeHigh ? "Scope变化需要重新确认验收口径。" : "当前未直接改变Feature核心Scope。"} low={!scopeHigh}/></div></section>
     <div className="next-action"><p>系统提供方案权衡，最终选择由制作策划完成。</p><Button onClick={onNext}>进入决策中心<ArrowRight size={16}/></Button></div>
   </>;
 }
 function RiskItem({ label, level, text, medium, low }: { label: string; level: string; text: string; medium?: boolean; low?: boolean }) { return <div className={`risk-item ${medium ? "medium" : low ? "low" : "high"}`}><span>{label}</span><strong>{level}</strong><p>{text}</p></div>; }
 
-function Decision({ decisions, setDecisions, onApply }: { decisions: string[]; setDecisions: (value: string[]) => void; onApply: () => void }) {
-  const isModeled = decisions.includes("critical") && decisions.includes("placeholder");
-  const hasComparisonOnly = decisions.some((id) => !["critical", "placeholder"].includes(id));
+function Decision({ decisions, recommendedIds, reasonId, isOfficialScenario, setDecisions, onApply }: { decisions: string[]; recommendedIds: string[]; reasonId: ReasonId; isOfficialScenario: boolean; setDecisions: (value: string[]) => void; onApply: () => void }) {
+  const isModeled = isOfficialScenario && decisions.includes("critical") && decisions.includes("placeholder");
+  const reason = reasons.find((item) => item.id === reasonId)?.label ?? "当前原因";
   const toggle = (id: string) => setDecisions(decisions.includes(id) ? decisions.filter((item) => item !== id) : [...decisions, id]);
-  return <><PageTitle kicker="决策中心" title="比较方案并做出人工选择" desc="系统辅助判断，不自动替代制作决策。请勾选要采用的方案。" action={<span className="selection-count">已选 {decisions.length} 项</span>}/>
-    <div className="decision-layout"><div className="option-list">{decisionOptions.map((option) => { const checked = decisions.includes(option.id); const comparisonOnly = !["critical", "placeholder"].includes(option.id); return <label key={option.id} className={`option ${checked ? "selected" : ""}`}><input className="decision-check" type="checkbox" checked={checked} onChange={() => toggle(option.id)}/><span className="option-letter">{option.letter}</span><div className="option-copy"><div><h2>{option.title}</h2><small>{option.en}</small></div><p><b>收益：</b>{option.benefit}</p><p><b>代价：</b>{option.cost}</p>{comparisonOnly && <small className="comparison-label">仅供比较，不参与本版本计算</small>}</div><em className={option.status === "推荐" ? "recommended" : ""}>{option.status}</em></label>; })}</div>
-      <aside className="panel decision-summary"><PanelTitle kicker="决策摘要" title="当前组合"/>{decisions.length === 0 ? <p className="empty">尚未选择方案。推荐组合会在快速演示中呈现，但不会自动代替你的选择。</p> : <div className="selected-options">{decisionOptions.filter((option) => decisions.includes(option.id)).map((option) => <span key={option.id}><Check size={14}/>{option.letter} · {option.title}</span>)}</div>}{isModeled ? <><div className="tradeoffs"><div><b>时间</b><p>保护D40核心交付</p></div><div><b>质量</b><p>保留关键可读性要求</p></div><div><b>资源</b><p>不新增资源，但产生跨团队并行与替换成本</p></div><div><b>范围</b><p>非关键表现进入已登记的Polish Backlog</p></div></div><p className="why"><b>为什么可用Placeholder？</b>Animation → VFX属于可部分解耦的软依赖，下游可以先用临时Event推进。</p>{hasComparisonOnly && <p className="notice"><TriangleAlert size={16}/>A / D / E仅供比较，不改变本版本B + C重排结果。</p>}</> : decisions.length > 0 && <p className="notice"><TriangleAlert size={16}/>本Demo仅建模B + C重排路径，当前组合不会直接得出“D40可行”。</p>}<Button className="full" disabled={!isModeled} onClick={onApply}>应用决策并重新排期<ArrowRight size={16}/></Button></aside>
+  return <><PageTitle kicker="决策中心" title="比较方案并做出人工选择" desc={`当前原因：${reason}。推荐会随原因变化，但不会替代人工决策。`} action={<span className="selection-count">已选 {decisions.length} 项</span>}/>
+    <div className="decision-layout"><div className="option-list">{decisionOptions.map((option) => { const checked = decisions.includes(option.id); const recommended = recommendedIds.includes(option.id); return <label key={option.id} className={`option ${checked ? "selected" : ""}`}><input className="decision-check" type="checkbox" checked={checked} onChange={() => toggle(option.id)}/><span className="option-letter">{option.letter}</span><div className="option-copy"><div><h2>{option.title}</h2><small>{option.en}</small></div><p><b>收益：</b>{option.benefit}</p><p><b>代价：</b>{option.cost}</p>{!recommended && <small className="comparison-label">可比较；不是当前原因的优先推荐</small>}</div><em className={recommended ? "recommended" : ""}>{recommended ? "优先推荐" : "可比较"}</em></label>; })}</div>
+      <aside className="panel decision-summary"><PanelTitle kicker="决策摘要" title="当前组合"/>{decisions.length === 0 ? <p className="empty">尚未选择方案。带“优先推荐”的方案由当前原因规则生成。</p> : <div className="selected-options">{decisionOptions.filter((option) => decisions.includes(option.id)).map((option) => <span key={option.id}><Check size={14}/>{option.letter} · {option.title}</span>)}</div>}{isModeled ? <><div className="tradeoffs"><div><b>时间</b><p>保护D40核心交付</p></div><div><b>质量</b><p>保留关键可读性要求</p></div><div><b>资源</b><p>不新增资源，但产生跨团队并行与替换成本</p></div><div><b>范围</b><p>非关键表现进入已登记的Polish Backlog</p></div></div><p className="why"><b>为什么可用Placeholder？</b>Animation → VFX属于可部分解耦的软依赖，下游可以先用临时Event推进。</p></> : <p className="notice"><TriangleAlert size={16}/>{isOfficialScenario ? "请选择B关键内容优先 + C Placeholder，运行官方Replan路径。" : "推荐已按当前原因更新；V1.0 Final仅对官方AN03 +3D、质量返工、B+C场景生成完整Replan。"}</p>}<Button className="full" disabled={!isModeled} onClick={onApply}>应用决策并重新排期<ArrowRight size={16}/></Button></aside>
     </div>
   </>;
 }
