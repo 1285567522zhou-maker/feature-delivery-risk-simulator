@@ -70,13 +70,12 @@ npm run dev
 
 ## 在线Demo
 
-- 主链接（GitHub Pages）：https://1285567522zhou-maker.github.io/feature-delivery-risk-simulator/
-- 备用链接（Vercel）：https://feature-delivery-risk-simulator.vercel.app/
-- 开发预览：https://feature-delivery-risk-simulator.green-pine-5194.chatgpt.site/
+- 主链接（公开演示）：https://feature-delivery-risk-simulator.green-pine-5194.chatgpt.site/
+- GitHub Pages备用地址（启用Pages后生效）：https://1285567522zhou-maker.github.io/feature-delivery-risk-simulator/
 
 ## 部署说明
 
-GitHub Pages通过仓库中的`Deploy GitHub Pages`工作流自动部署。推送到`main`分支后即可一键重新发布；也可以在GitHub Actions页面手动运行该工作流。
+当前主链接为公开静态演示站，无需登录或安装软件。GitHub Pages通过仓库中的`Deploy GitHub Pages`工作流部署；在仓库设置中将Pages来源设为`GitHub Actions`后，推送到`main`分支即可自动重新发布，也可以在GitHub Actions页面手动运行该工作流。
 
 项目不需要环境变量。静态构建命令为：
 
