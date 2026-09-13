@@ -1,0 +1,52 @@
+export const demoScenario = {
+  feature: "多人首领Feature",
+  milestone: "Alpha",
+  baselineDay: 40,
+  taskCount: 36,
+  delayedCount: 1,
+  remainingWorkdays: 15,
+  event: {
+    taskId: "AN03",
+    taskName: "Phase 2关键动画",
+    delayDays: 3,
+    issueType: "质量返工导致延期",
+    reason: "Quality Rework｜质量返工",
+    description: "Phase 2关键机制动画与Event、VFX Timing未能稳定对齐，当前版本存在机制预告可读性风险，需要返修。",
+  },
+} as const;
+
+export const milestones = [
+  { name: "Prototype", day: 15 },
+  { name: "Playable", day: 25 },
+  { name: "Alpha", day: 40, active: true },
+  { name: "Content Complete", day: 50 },
+  { name: "Feature Ready", day: 60 },
+];
+
+export const dependencyNodes = [
+  { id: "D03", name: "Gameplay", owner: "玩法策划", schedule: "D03", status: "已完成", dependency: "Hard Dependency", detail: "冻结Boss关键机制与预警需求。", state: "done" },
+  { id: "P02/P03", name: "Boss Logic", owner: "玩法 / 程序", schedule: "D18–D26", status: "已完成", dependency: "Hard Dependency", detail: "Boss逻辑与阶段流程是动画制作前置。", state: "done" },
+  { id: "AN03", name: "Phase 2关键动画", owner: "动画", schedule: "D27–D32", projected: "D35", status: "延期", dependency: "Hard Dependency", predecessor: "D03", downstream: "Animation Event / VFX / Integration", detail: "关键机制动作与事件节点返工，位于Alpha关键链路。", state: "risk" },
+  { id: "AE01", name: "Animation Event", owner: "动画 / 技术美术", schedule: "D32–D34", status: "受影响", dependency: "Soft Dependency", detail: "可先使用临时Event推进下游，但正式替换需要回归。", state: "affected" },
+  { id: "FX01/AU01", name: "VFX / Audio", owner: "特效 / 音频", schedule: "D33–D38", status: "受影响", dependency: "Soft Dependency", detail: "依赖动作Timing，可用Placeholder部分解耦。", state: "affected" },
+  { id: "I01", name: "Integration", owner: "客户端", schedule: "D38–D40", status: "窗口压缩", dependency: "Hard Dependency", detail: "正式资源到位后需要完成全链路集成。", state: "waiting" },
+  { id: "MP04/QA02", name: "Multiplayer Validation", owner: "网络 / QA", schedule: "D38–D40", status: "窗口压缩", dependency: "Validation Dependency", detail: "多人环境需要验证同步、触发与可读性。", state: "waiting" },
+  { id: "I02/QA03", name: "QA", owner: "客户端 / QA", schedule: "D39–D40", status: "窗口压缩", dependency: "Validation Dependency", detail: "替换正式资源后仍需完成回归验证。", state: "waiting" },
+  { id: "D40", name: "Alpha", owner: "制作", schedule: "Baseline D40", status: "风险中", dependency: "Milestone", detail: "风险暴露约D43；冻结Feature Ready仍为D60。", state: "milestone" },
+];
+
+export const decisionOptions = [
+  { id: "resource", letter: "A", title: "增加动画资源", en: "Add Resource", benefit: "提高并行处理能力。", cost: "存在上下文接入成本，工作未必可拆分，并增加资源成本。", status: "备选" },
+  { id: "critical", letter: "B", title: "关键动画优先", en: "Critical First", benefit: "优先核心机制与Milestone动画，保护Alpha核心交付。", cost: "非关键表现完整度后移。", status: "推荐" },
+  { id: "placeholder", letter: "C", title: "Placeholder临时联调", en: "Placeholder Integration", benefit: "下游使用临时Event与Timing，减少等待。", cost: "产生正式替换与回归成本。", status: "推荐" },
+  { id: "scope", letter: "D", title: "缩减Alpha Scope", en: "Reduce Scope", benefit: "降低当前验收范围与交付风险。", cost: "Alpha验证范围与体验完整度下降。", status: "预案" },
+  { id: "milestone", letter: "E", title: "整体后移", en: "Move Milestone", benefit: "保留原Scope与质量要求。", cost: "影响后续Milestone与版本计划。", status: "不推荐" },
+];
+
+export const residualRisks = [
+  { id: "R1", title: "Placeholder替换风险", owner: "VFX / Animation", action: "锁定正式Event替换清单与验收时间。" },
+  { id: "R2", title: "机制可读性风险", owner: "Gameplay", action: "保留关键机制可读性验收，不用临时方案降低标准。" },
+  { id: "R3", title: "QA回归窗口压缩", owner: "QA", action: "预留正式资源替换后的定向回归窗口。" },
+  { id: "R4", title: "非关键动画后移", owner: "Animation / Production", action: "登记Polish Backlog并明确后续交付节点。" },
+];
+
